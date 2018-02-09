@@ -14,6 +14,7 @@ setup(
         "cirrus",
         "cryptography>=2.1.2",
         "Flask==0.10.1",
+        "flask-restful>=0.3.6",
         "Flask-CORS==3.0.3",
         "Flask_OAuthlib==0.9.4",
         "Flask_SQLAlchemy_Session==1.1",
