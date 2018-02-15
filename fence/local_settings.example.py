@@ -6,6 +6,8 @@ MOCK_AUTH = False
 MOCK_STORAGE = False
 
 HOSTNAME = ''
+BASE_URL = ''
+
 APPLICATION_ROOT = '/user'
 
 EMAIL_SERVER = 'localhost'
@@ -16,12 +18,26 @@ SEND_TO = 'phillis.tt@gmail.com'
 
 HMAC_ENCRYPTION_KEY = ''
 
+DEFAULT_LOGIN_URL = BASE_URL + '/login/google'
+DEFAULT_LOGIN_URL_REDIRECT_PARAM = 'redirect'
+
 OPENID_CONNECT = {
     'google': {
         'client_id': '',
         'client_secret': '',
         'redirect_url': ''
-    }
+    },
+    'fence': {
+        'client_id': '',
+        'client_secret': '',
+        'api_base_url': '',
+        'authorize_url': '',
+        'access_token_url': '',
+        'refresh_token_url': '',
+        'client_kwargs': {
+            'redirect_uri': '',
+        },
+    },
 }
 
 STORAGE_CREDENTIALS = {
@@ -99,16 +115,3 @@ ENABLED_IDENTITY_PROVIDERS = {
 
 # Hostname of a second fence instance to use as an IDP.
 MULTI_TENANT_FENCE_HOSTNAME = 'http://localhost/user'
-
-# OAuth configuration for using a second fence instance IDP.
-MULTI_TENANT_OAUTH = {
-    'client_id': '',
-    'client_secret': '',
-    'api_base_url': MULTI_TENANT_FENCE_HOSTNAME,
-    'authorize_url': MULTI_TENANT_FENCE_HOSTNAME + '/oauth2/authorize',
-    'access_token_url': MULTI_TENANT_FENCE_HOSTNAME + '/oauth2/token',
-    'refresh_token_url': MULTI_TENANT_FENCE_HOSTNAME + '/oauth2/token',
-    'client_kwargs': {
-        'redirect_uri': HOSTNAME + '/oauth2/authorize'
-    }
-}
