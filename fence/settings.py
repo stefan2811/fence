@@ -1,9 +1,17 @@
+from cdislogging import get_logger
 from collections import OrderedDict
 from datetime import timedelta
 import os
 
+logger = get_logger(__name__)
+# default settings if local_settings is not present
+BASE_URL = 'http://localhost'
 # local_settings is not installed under fence module in prod
-from local_settings import *
+try:
+    from local_settings import *
+except:
+    logger.warn("local_settings is not found")
+
 
 
 # Use this setting when fence will be deployed in such a way that fence will
@@ -22,8 +30,13 @@ SINGLE_LOGOUT = 'https://itrusteauth.nih.gov/siteminderagent/smlogout.asp?mode=n
 LOGOUT = "https://bionimbus-pdc.opensciencedatacloud.org/auth/logout/?next=/Shibboleth.sso/Logout%3Freturn%3Dhttps%3A%2F%2Fbionimbus-pdc.opensciencedatacloud.org/api"
 BIONIMBUS_ACCOUNT_ID = 655886864976
 
-ACCESS_TOKEN_LIFETIME = timedelta(seconds=600)
+
+ACCESS_TOKEN_EXPIRES_IN = 1200
+ACCESS_TOKEN_LIFETIME = timedelta(seconds=1200)  # for backwards-compatibility
 ACCESS_TOKEN_COOKIE_NAME = "access_token"
+
+REFRESH_TOKEN_EXPIRES_IN = 1728000
+
 
 # stale session time
 SESSION_TIMEOUT = timedelta(seconds=1800)

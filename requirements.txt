@@ -17,6 +17,7 @@ psycopg2==2.7.3.2
 pysftp==0.2.9
 pytest-flask==0.10.0
 pytest==3.2.3
+bcrypt==3.1.4 # previous version breaks python_bcrypt
 python_bcrypt==0.3.2
 python_dateutil==2.6.1
 PyJWT==1.5.3
@@ -35,4 +36,4 @@ pyyaml
 -e git+https://github.com/uc-cdis/datamodelutils.git@0.3.0#egg=datamodelutils
 -e git+https://github.com/uc-cdis/cdis-python-utils.git@0.2.5#egg=cdispyutils
 -e git+https://github.com/uc-cdis/cirrus.git@0.0.0#egg=cirrus-0.0.0
--e git+https://github.com/uc-cdis/authutils.git@feat/jwt-validation#egg=authutils-0.0.0
+-e git+https://github.com/uc-cdis/authutils.git@1.0.0#egg=authutils-1.0.0

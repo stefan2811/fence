@@ -5,9 +5,7 @@ DB = 'postgresql://test:test@localhost:5432/fence'
 MOCK_AUTH = False
 MOCK_STORAGE = False
 
-HOSTNAME = ''
-BASE_URL = ''
-
+BASE_URL = 'http://localhost/user'
 APPLICATION_ROOT = '/user'
 
 EMAIL_SERVER = 'localhost'
@@ -77,8 +75,8 @@ STORAGES = ['/cleversafe']
 
 SHIBBOLETH_HEADER = 'persistent_id'
 
-# assumes shibboleth is deployed under {HOSTNAME}/shibboleth
-SSO_URL = 'https://auth.nih.gov/affwebservices/public/saml2sso?SPID={}/shibboleth&RelayState='.format(HOSTNAME)
+# assumes shibboleth is deployed under {BASE_URL}/shibboleth
+SSO_URL = 'https://auth.nih.gov/affwebservices/public/saml2sso?SPID={}/shibboleth&RelayState='.format(BASE_URL)
 
 ITRUST_GLOBAL_LOGOUT = 'https://auth.nih.gov/siteminderagent/smlogout.asp?mode=nih&AppReturnUrl='
 
