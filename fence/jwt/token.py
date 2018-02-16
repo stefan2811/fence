@@ -410,6 +410,13 @@ def generate_id_token(
     auth_time = auth_time or iat
 
     claims = {
+        'context': {
+            'user': {
+                'name': user.username,
+                'is_admin': user.is_admin,
+                'projects': dict(user.project_access),
+            },
+        },
         'pur': 'id',
         'aud': audiences,
         'sub': str(user.id),

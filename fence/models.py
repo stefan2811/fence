@@ -111,6 +111,9 @@ class Client(Base, OAuth2ClientMixin):
         scopes = scopes[0].split(',')
         return all(scope in self._scopes for scope in scopes)
 
+    def check_redirect_uri(self, redirect_uri):
+        return redirect_uri in self.redirect_uris
+
 
 class AuthorizationCode(Base, OAuth2AuthorizationCodeMixin):
 

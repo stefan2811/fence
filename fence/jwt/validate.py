@@ -33,7 +33,8 @@ def validate_purpose(claims, pur):
         )
 
 
-def validate_jwt(encoded_token=None, aud=None, purpose=None, public_key=None):
+def validate_jwt(
+        encoded_token=None, aud=None, purpose=None, public_key=None, **kwargs):
     """
     Validate a JWT and return the claims.
 
@@ -87,9 +88,14 @@ def validate_jwt(encoded_token=None, aud=None, purpose=None, public_key=None):
             purpose=purpose,
             iss=iss,
             public_key=public_key,
+            **kwargs
         )
     except authutils.errors.JWTError as e:
-        raise JWTError('Invalid token : {}'.format(str(e)))
+        msg = 'Invalid token : {}'.format(str(e))
+        unverified_claims = jwt.decode(claims, verify=False)
+        if '' in unverified_claims['aud']:
+            msg += '; was OIDC client configured with scopes?'
+        raise JWTError(msg)
     if purpose:
         validate_purpose(claims, purpose)
     if 'pur' not in claims:

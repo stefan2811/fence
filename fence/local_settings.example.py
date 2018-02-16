@@ -33,6 +33,7 @@ OPENID_CONNECT = {
         'access_token_url': '',
         'refresh_token_url': '',
         'client_kwargs': {
+            'scope': 'openid user',
             'redirect_uri': '',
         },
     },

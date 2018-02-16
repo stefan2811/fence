@@ -6,7 +6,7 @@ Define pytest fixtures.
 import json
 import jwt
 from mock import patch, MagicMock
-from moto import mock_s3, mock_sts
+#from moto import mock_s3, mock_sts
 import os
 
 from addict import Dict
@@ -179,8 +179,8 @@ class Mocker(object):
 
 
 @pytest.fixture(scope='session')
-@mock_s3
-@mock_sts
+#@mock_s3
+#@mock_sts
 def app():
     """
     Flask application fixture.

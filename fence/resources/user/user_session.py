@@ -111,6 +111,9 @@ class UserSession(SessionMixin):
         """
         return self.session_token["context"].get(key, *args)
 
+    def pop(self, key):
+        return self.session_token['context'].pop(key)
+
     def clear(self):
         """
         clear current session
