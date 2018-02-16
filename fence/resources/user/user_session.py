@@ -99,10 +99,7 @@ class UserSession(SessionMixin):
             token = create_session_token(
                 current_app.keypairs[0],
                 timeout.seconds,
-                session_started=self.get('session_started'),
-                username=self.get('username'),
-                provider=self.get('provider'),
-                redirect=self.get('redirect')
+                self.session_token['context']
             )
             self._encoded_token = token
 
@@ -139,6 +136,9 @@ class UserSession(SessionMixin):
             # if there's no current token set, clear data to be sure
             self.clear()
 
+    def __contains__(self, key):
+        return key in self.session_token['context']
+
     def __getitem__(self, key):
         return self.session_token["context"][key]
 
@@ -161,6 +161,9 @@ class UserSession(SessionMixin):
 
     def __len__(self):
         return len(self.session_token)
+
+    def pop(self, key):
+        return self.session_token['context'].pop(key)
 
 
 class UserSessionInterface(SessionInterface):

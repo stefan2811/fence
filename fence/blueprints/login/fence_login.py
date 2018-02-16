@@ -51,7 +51,7 @@ class FenceLogin(Resource):
         if mismatched_state:
             raise Unauthorized('authorization request failed; state mismatch')
         # Get the token response and log in the user.
-        tokens = flask.current_app.fence_client.get_access_token()
+        tokens = flask.current_app.fence_client.fetch_access_token()
         id_token_claims = validate_jwt(tokens['id_token'])
         username = id_token_claims['context']['user']['name']
         login_user(flask.request, username, IdentityProvider.fence)
