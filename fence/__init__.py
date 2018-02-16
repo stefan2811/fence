@@ -106,8 +106,6 @@ def app_sessions(app):
     )
     if configured_fence:
         app.fence_client = OAuthClient(**app.config['OPENID_CONNECT']['fence'])
-        # TODO
-
     app.session_interface = UserSessionInterface()
 
 
