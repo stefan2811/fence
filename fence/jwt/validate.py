@@ -75,7 +75,7 @@ def validate_jwt(
     aud = set(aud)
     iss = flask.current_app.config['BASE_URL']
     issuers = [iss]
-    oidc_iss = flask.current_app.config['OIDC_ISSUER']
+    oidc_iss = flask.current_app.config.get('OIDC_ISSUER')
     if oidc_iss:
         issuers.append(oidc_iss)
     try:
