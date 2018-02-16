@@ -61,7 +61,7 @@ class UserSession(SessionMixin):
                 # empty one silently
                 jwt_info = self._get_initial_session_token()
         else:
-            jwt_info = {'context': {}}
+            jwt_info = self._get_initial_session_token()
 
         self.session_token = jwt_info
 

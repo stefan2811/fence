@@ -74,19 +74,25 @@ def validate_jwt(
     aud = aud or {'openid'}
     aud = set(aud)
     iss = flask.current_app.config['BASE_URL']
+    issuers = [iss]
+    oidc_iss = flask.current_app.config['OIDC_ISSUER']
+    if oidc_iss:
+        issuers.append(oidc_iss)
     try:
         token_headers = jwt.get_unverified_header(encoded_token)
     except jwt.exceptions.InvalidTokenError as e:
         raise JWTError('Invalid token : {}'.format(str(e)))
-    public_key = authutils.token.keys.get_public_key_for_kid(
-        token_headers.get('kid'), attempt_refresh=False
+    token_iss = jwt.decode(encoded_token, verify=False).get('iss')
+
+    public_key = authutils.token.keys.get_public_key(
+        token_headers.get('kid'), token_iss, attempt_refresh=(token_iss != iss)
     )
     try:
         claims = authutils.token.validate.validate_jwt(
             encoded_token=encoded_token,
             aud=aud,
             purpose=purpose,
-            iss=iss,
+            issuers=issuers,
             public_key=public_key,
             **kwargs
         )
