@@ -34,7 +34,8 @@ def validate_purpose(claims, pur):
 
 
 def validate_jwt(
-        encoded_token=None, aud=None, purpose=None, public_key=None, **kwargs):
+        encoded_token=None, aud=None, purpose=None, public_key=None,
+        attempt_refresh=False, **kwargs):
     """
     Validate a JWT and return the claims.
 
@@ -78,14 +79,10 @@ def validate_jwt(
     oidc_iss = flask.current_app.config.get('OIDC_ISSUER')
     if oidc_iss:
         issuers.append(oidc_iss)
-    try:
-        token_headers = jwt.get_unverified_header(encoded_token)
-    except jwt.exceptions.InvalidTokenError as e:
-        raise JWTError('Invalid token : {}'.format(str(e)))
     token_iss = jwt.decode(encoded_token, verify=False).get('iss')
-
-    public_key = authutils.token.keys.get_public_key(
-        token_headers.get('kid'), token_iss, attempt_refresh=(token_iss != iss)
+    attempt_refresh = token_iss != iss
+    public_key = authutils.token.keys.get_public_key_for_token(
+        encoded_token, attempt_refresh=attempt_refresh
     )
     try:
         claims = authutils.token.validate.validate_jwt(
@@ -94,6 +91,7 @@ def validate_jwt(
             purpose=purpose,
             issuers=issuers,
             public_key=public_key,
+            attempt_refresh=attempt_refresh,
             **kwargs
         )
     except authutils.errors.JWTError as e:

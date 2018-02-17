@@ -68,13 +68,12 @@ def app_config(app, settings='fence.settings', root_dir=None):
         app.keypairs.append(keys.Keypair(
             kid=kid, public_key=public_key, private_key=private_key
         ))
-    # The fence app implements ``app.jwt_public_keys`` in the same fashion as
-    # the clients, so that fence can also call the validation functions in
-    # ``cdispyutils``.
-    app.jwt_public_keys = {app.config['BASE_URL']: OrderedDict([
-        (str(keypair.kid), str(keypair.public_key))
-        for keypair in app.keypairs
-    ])}
+    app.jwt_public_keys = {
+        app.config['BASE_URL']: OrderedDict([
+            (str(keypair.kid), str(keypair.public_key))
+            for keypair in app.keypairs
+        ])
+    }
 
 
 def app_sessions(app):

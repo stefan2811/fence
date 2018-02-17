@@ -24,10 +24,9 @@ class FenceRedirect(Resource):
         oauth2_redirect_uri = (
             flask.current_app.fence_client.session.redirect_uri
         )
-
-        flask.redirect_url = flask.request.args.get('redirect')
-        if flask.redirect_url:
-            flask.session['redirect'] = flask.redirect_url
+        redirect_url = flask.request.args.get('redirect')
+        if redirect_url:
+            flask.session['redirect'] = redirect_url
         authorization_url, state = (
             flask.current_app
             .fence_client
@@ -61,13 +60,14 @@ class FenceLogin(Resource):
             redirect_uri, **flask.request.args.to_dict()
         )
         id_token_claims = validate_jwt(
-            tokens['id_token'], aud={'openid'}, purpose='id'
+            tokens['id_token'], aud={'openid'}, purpose='id',
+            attempt_refresh=True
         )
         username = id_token_claims['context']['user']['name']
         flask.session['username'] = username
         flask.session['provider'] = IdentityProvider.fence
         login_user(flask.request, username, IdentityProvider.fence)
 
-        if flask.session.get('redirect'):
+        if 'redirect' in flask.session:
             return flask.redirect(flask.session.get('redirect'))
         return flask.jsonify({'username': username})
