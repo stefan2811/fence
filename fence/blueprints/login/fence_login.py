@@ -21,12 +21,17 @@ class FenceRedirect(Resource):
 
     def get(self):
         """Handle ``GET /login/fence``."""
-        redirect_uri = flask.current_app.fence_client.session.redirect_uri
-        flask.session['redirect_url'] = redirect_uri
+        oauth2_redirect_uri = (
+            flask.current_app.fence_client.session.redirect_uri
+        )
+
+        flask.redirect_url = flask.request.args.get('redirect')
+        if flask.redirect_url:
+            flask.session['redirect'] = flask.redirect_url
         authorization_url, state = (
             flask.current_app
             .fence_client
-            .generate_authorize_redirect(redirect_uri)
+            .generate_authorize_redirect(oauth2_redirect_uri)
         )
         flask.session['state'] = state
         return flask.redirect(authorization_url)
@@ -59,5 +64,10 @@ class FenceLogin(Resource):
             tokens['id_token'], aud={'openid'}, purpose='id'
         )
         username = id_token_claims['context']['user']['name']
+        flask.session['username'] = username
+        flask.session['provider'] = IdentityProvider.fence
         login_user(flask.request, username, IdentityProvider.fence)
-        return flask.redirect(flask.session['redirect_url'])
+
+        if flask.session.get('redirect'):
+            return flask.redirect(flask.session.get('redirect'))
+        return flask.jsonify({'username': username})

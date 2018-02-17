@@ -24,7 +24,7 @@ from userdatamodel import Base
 from userdatamodel.models import (
     AccessPrivilege, Application, AuthorizationProvider, Bucket, Certificate,
     CloudProvider, ComputeAccess, HMACKeyPair, HMACKeyPairArchive,
-    IdentityProvider, Project, ProjectToBucket, ResearchGroup, S3Credential,
+    IdentityProvider, Project, ProjectToBucket, Group, S3Credential,
     StorageAccess, User, UserToBucket
 )
 
