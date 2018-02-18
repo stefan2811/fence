@@ -43,7 +43,7 @@ def any_access():
     else:
         projects = flask.g.token['context']['user']['projects']
     
-    success = False
+    success = True
 
     if not project and len(projects) > 0:
         success = True
