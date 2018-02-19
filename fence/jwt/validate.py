@@ -79,7 +79,10 @@ def validate_jwt(
     oidc_iss = flask.current_app.config.get('OIDC_ISSUER')
     if oidc_iss:
         issuers.append(oidc_iss)
-    token_iss = jwt.decode(encoded_token, verify=False).get('iss')
+    try:
+        token_iss = jwt.decode(encoded_token, verify=False).get('iss')
+    except jwt.InvalidTokenError as e:
+        raise JWTError(e.message)
     attempt_refresh = token_iss != iss
     public_key = authutils.token.keys.get_public_key_for_token(
         encoded_token, attempt_refresh=attempt_refresh

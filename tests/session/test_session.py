@@ -43,7 +43,7 @@ def test_valid_session(app):
     test_session_jwt = create_session_token(
         app.keypairs[0],
         app.config.get("SESSION_TIMEOUT").seconds,
-        context={'username': 'username'},
+        context={'username': username},
     )
 
     # Test that once the session is started, we have access to
@@ -62,7 +62,7 @@ def test_valid_session_modified(app):
     test_session_jwt = create_session_token(
         app.keypairs[0],
         app.config.get("SESSION_TIMEOUT").seconds,
-        context={'username': 'username'},
+        context={'username': username},
     )
 
     # Test that once the session is started, we have access to
