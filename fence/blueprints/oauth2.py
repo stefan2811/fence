@@ -17,8 +17,11 @@ stateless.
 import flask
 
 from authlib.common.urls import add_params_to_uri
-from authlib.specs.rfc6749.errors import AccessDeniedError
-from authlib.specs.rfc6749.errors import InvalidRequestError
+from authlib.specs.rfc6749.errors import (
+    AccessDeniedError,
+    InvalidRequestError,
+    OAuth2Error,
+)
 
 from fence.errors import Unauthorized
 from fence.models import Client
@@ -74,7 +77,10 @@ def authorize(*args, **kwargs):
         )
         return flask.redirect(login_url)
 
-    grant = server.validate_authorization_request()
+    try:
+        grant = server.validate_authorization_request()
+    except OAuth2Error as e:
+        raise Unauthorized('{} failed to authorize'.format(str(e)))
 
     client_id = grant.params.get('client_id')
 

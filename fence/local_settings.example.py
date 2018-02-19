@@ -16,12 +16,27 @@ SEND_TO = 'phillis.tt@gmail.com'
 
 HMAC_ENCRYPTION_KEY = ''
 
+DEFAULT_LOGIN_URL = BASE_URL + '/login/google'
+DEFAULT_LOGIN_URL_REDIRECT_PARAM = 'redirect'
+
 OPENID_CONNECT = {
     'google': {
         'client_id': '',
         'client_secret': '',
         'redirect_url': ''
-    }
+    },
+    'fence': {
+        'client_id': '',
+        'client_secret': '',
+        'api_base_url': '',
+        'authorize_url': '',
+        'access_token_url': '',
+        'refresh_token_url': '',
+        'client_kwargs': {
+            'scope': 'openid user',
+            'redirect_uri': '',
+        },
+    },
 }
 
 STORAGE_CREDENTIALS = {
@@ -86,3 +101,16 @@ S3_BUCKETS = {
     "bucket2": "CRED2",
     "bucket3": "CRED1"
 }
+
+#: Confiure which identity providers this fence instance can use for login.
+#:
+#: See ``fence/blueprints/login/__init__.py`` for which identity providers can
+#: be loaded.
+ENABLED_IDENTITY_PROVIDERS = {
+    'fence',
+    'google',
+    'shib',
+}
+
+# Hostname of a second fence instance to use as an IDP.
+MULTI_TENANT_FENCE_HOSTNAME = 'http://localhost/user'

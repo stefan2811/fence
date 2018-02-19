@@ -1,6 +1,6 @@
 from functools import wraps
 
-from authutils.errors import JWTError
+from authutils.errors import JWTError, JWTExpiredError
 import flask
 from flask_sqlalchemy_session import current_session
 
@@ -40,7 +40,7 @@ def login_user(request, username, provider):
             .filter(IdentityProvider.name == provider).first()
         )
         if not idp:
-            raise InternalError("{} provider not setup".format(provider))
+            idp = IdentityProvider(name=provider)
         user.identity_provider = idp
         current_session.add(user)
         current_session.commit()
