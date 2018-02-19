@@ -231,7 +231,7 @@ Example:
 - Our microservices (e.g. [`sheepdog`](https://github.com/uc-cdis/sheepdog)) are resource providers
 
 ### Example Flows
-j
+
 Note that the `3rd Party App` acts as the `client` in these examples.
 
 [//]: # (See /docs folder for README on how to regenerate these sequence diagrams)
