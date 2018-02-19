@@ -8,8 +8,6 @@ import urlparse
 # in python3:
 # urllib.parse
 
-import requests
-
 import fence
 
 from tests.utils import oauth2
@@ -36,8 +34,8 @@ def test_redirect_from_oauth(fence_client_app, oauth_client):
 
 
 def test_login(
-        fence_client_app, fence_oauth_client, fence_oauth_client_url,
-        fence_idp_server, mock_get, example_keys_response, monkeypatch):
+        app, fence_client_app, fence_oauth_client, fence_oauth_client_url,
+        mock_get, example_keys_response, monkeypatch):
     """
     Test that:
         1. the ``/login/fence`` client endpoint redirects to the
@@ -52,14 +50,15 @@ def test_login(
         'authutils.token.keys.refresh_jwt_public_keys',
         lambda: None
     )
-    with fence_client_app.test_client() as client:
+    with fence_client_app.test_client() as fence_client_client:
         # Part 1.
         redirect_url_quote = urllib.quote('/login/fence/login')
         path = '/login/fence?redirect_uri={}'.format(redirect_url_quote)
-        response_login_fence = client.get(path)
+        response_login_fence = fence_client_client.get(path)
         # This should be pointing at ``/oauth2/authorize`` of the IDP fence.
         assert '/oauth2/authorize' in response_login_fence.location
 
+    with app.test_client() as client:
         # Part 2.
         # Remove the QS from the URL so we can use POST instead.
         url = remove_qs(response_login_fence.location)
@@ -73,8 +72,8 @@ def test_login(
         headers = oauth2.create_basic_header_for_client(fence_oauth_client)
         # Normally this would just redirect back to the configured client URL
         # with the code as a query string argument.
-        authorize_response = requests.post(
-            url, headers=headers, data=authorize_params, allow_redirects=False
+        authorize_response = client.post(
+            url, headers=headers, data=authorize_params
         )
         assert authorize_response.status_code == 302
         assert 'Location' in authorize_response.headers

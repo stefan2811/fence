@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 
 from addict import Dict
@@ -89,22 +88,6 @@ def fence_client_app(
         **client_app.config['OPENID_CONNECT']['fence']
     )
     return client_app
-
-
-@pytest.fixture(scope='function')
-def fence_idp_server(request, app, monkeypatch):
-    """
-    Run an instance of the original fence app in the background to test the
-    multi-tenant client code against.
-    """
-
-    def target():
-        app.run(port=50000, use_reloader=False)
-
-    app_process = multiprocessing.Process(target=target)
-    app_process.start()
-    request.addfinalizer(app_process.terminate)
-    return
 
 
 @pytest.fixture(scope='session')
