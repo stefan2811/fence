@@ -15,12 +15,16 @@ from tests import test_settings
 
 
 @pytest.fixture(scope='function')
-def fence_oauth_client(app, db_session, oauth_user):
+def fence_oauth_client_url():
+    return 'http://fence-test-client.net/oauth'
+
+
+@pytest.fixture(scope='function')
+def fence_oauth_client(app, db_session, oauth_user, fence_oauth_client_url):
     """
     Register an OAuth client for a new fence instance to use as an oauth client
     of another fence instance.
     """
-    url = 'https://fence-test-client.net'
     client_id = 'fence_instance'
     client_secret = fence.utils.random_str(50)
     hashed_secret = bcrypt.hashpw(client_secret, bcrypt.gensalt())
@@ -32,15 +36,20 @@ def fence_oauth_client(app, db_session, oauth_user):
     )
     db_session.add(models.Client(
         client_id=client_id, client_secret=hashed_secret, user=test_user,
-        allowed_scopes=['openid', 'user'], _redirect_uris=url, description='',
+        allowed_scopes=['openid', 'user'],
+        _redirect_uris=fence_oauth_client_url, description='',
         is_confidential=True, name='fence_oauth_client'
     ))
     db_session.commit()
-    return Dict(client_id=client_id, client_secret=client_secret, url=url)
+    return Dict(
+        client_id=client_id, client_secret=client_secret,
+        url=fence_oauth_client_url
+    )
 
 
 @pytest.fixture(scope='function')
-def fence_client_app(app, fence_oauth_client, db_session):
+def fence_client_app(
+        app, fence_oauth_client, fence_oauth_client_url, db_session):
     """
     A Flask application fixture which acts as a client of the original ``app``
     in a multi-tenant configuration.
@@ -72,7 +81,7 @@ def fence_client_app(app, fence_oauth_client, db_session):
             'refresh_token_url': 'http://localhost:50000/oauth2/token',
             'client_kwargs': {
                 'scope': 'openid user',
-                'redirect_uri': '/client',
+                'redirect_uri': fence_oauth_client_url,
             }
         }
     }
