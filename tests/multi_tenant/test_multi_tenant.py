@@ -40,19 +40,27 @@ def test_login(
         fence_idp_server, mock_get, example_keys_response, monkeypatch):
     """
     Test that:
-        - the ``/login/fence`` client endpoint redirects to the
+        1. the ``/login/fence`` client endpoint redirects to the
           ``/oauth2/authorize`` endpoint on the IDP fence,
+        2. POST-ing to ``/oauth2/authorize`` on the IDP fence redirects to
+          the configured client URL with the code in the query string
+          arguments,
     """
+    # Disable the keys refreshing since requests will not work with the client
+    # app.
     monkeypatch.setattr(
         'authutils.token.keys.refresh_jwt_public_keys',
         lambda: None
     )
     with fence_client_app.test_client() as client:
+        # Part 1.
         redirect_url_quote = urllib.quote('/login/fence/login')
         path = '/login/fence?redirect_uri={}'.format(redirect_url_quote)
         response_login_fence = client.get(path)
         # This should be pointing at ``/oauth2/authorize`` of the IDP fence.
         assert '/oauth2/authorize' in response_login_fence.location
+
+        # Part 2.
         # Remove the QS from the URL so we can use POST instead.
         url = remove_qs(response_login_fence.location)
         # should now have ``url == 'http://localhost:50000/oauth2/authorize``.
@@ -63,6 +71,8 @@ def test_login(
         authorize_params = {k: v[0] for k, v in authorize_params.iteritems()}
         authorize_params['confirm'] = 'yes'
         headers = oauth2.create_basic_header_for_client(fence_oauth_client)
+        # Normally this would just redirect back to the configured client URL
+        # with the code as a query string argument.
         authorize_response = requests.post(
             url, headers=headers, data=authorize_params, allow_redirects=False
         )
