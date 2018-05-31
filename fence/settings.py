@@ -49,3 +49,7 @@ MAX_API_KEY_TTL = 2592000
 #: The number of seconds after an access token is issued until it expires.
 MAX_ACCESS_TOKEN_TTL = 3600
 
+# Use this setting when fence will be deployed in such a way that fence will
+# only receive traffic from internal (CDIS) clients, and can safely use HTTP.
+os.environ['AUTHLIB_INSECURE_TRANSPORT'] = 'true'
+
