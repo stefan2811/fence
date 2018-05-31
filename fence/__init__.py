@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import os
+from yaml import safe_load as yaml_load
 
 from authutils.oauth2.client import OAuthClient
 import flask
@@ -39,27 +40,38 @@ def app_config(app, settings='fence.settings', root_dir=None):
     """
     Set up the config for the Flask app.
     """
+    if root_dir is None:
+        root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    # TODO better way to search for yaml? pass as arg into init?
+    try:
+        config_path = os.path.realpath(os.path.join(root_dir + '/fence/config.yaml'))
+        print(config_path)
+        data = yaml_load(open(config_path))
+    except IOError:
+        try:
+            data = yaml_load(open('/var/www/fence/config.yaml'))
+        except IOError as exc:
+            raise IOError(
+                'Could not find config.yaml in fence root dir or '
+                '/var/www/fence')
+
+    app.config.update(data)
+
     app.config.from_object(settings)
-    if 'BASE_URL' not in app.config:
-        base_url = app.config['HOSTNAME']
-        if not base_url.startswith('http'):
-            base_url = 'https://' + base_url
-        app.config['BASE_URL'] = base_url
     if 'ROOT_URL' not in app.config:
         url = urlparse.urlparse(app.config['BASE_URL'])
         app.config['ROOT_URL'] = '{}://{}'.format(url.scheme, url.netloc)
 
     app.keypairs = []
-    if root_dir is None:
-        root_dir = os.path.dirname(
-                os.path.dirname(os.path.realpath(__file__)))
     if 'AWS_CREDENTIALS' in app.config and len(app.config['AWS_CREDENTIALS']) > 0:
         value = app.config['AWS_CREDENTIALS'].values()[0]
         app.boto = BotoManager(value, logger=app.logger)
         app.register_blueprint(
             fence.blueprints.data.blueprint, url_prefix='/data'
         )
-    for kid, (public, private) in app.config['JWT_KEYPAIR_FILES'].iteritems():
+
+    for kid, (public, private) in OrderedDict(app.config['JWT_KEYPAIR_FILES']).iteritems():
         public_filepath = os.path.join(root_dir, public)
         private_filepath = os.path.join(root_dir, private)
         with open(public_filepath, 'r') as f:
@@ -69,12 +81,101 @@ def app_config(app, settings='fence.settings', root_dir=None):
         app.keypairs.append(keys.Keypair(
             kid=kid, public_key=public_key, private_key=private_key
         ))
+
     app.jwt_public_keys = {
         app.config['BASE_URL']: OrderedDict([
             (str(keypair.kid), str(keypair.public_key))
             for keypair in app.keypairs
         ])
     }
+
+    # TODO should we do generatic template replacing or use a template engine?
+
+    # BASE_URL replacement
+    google_redirect = (
+        app.config.get('OPENID_CONNECT', {})
+        .get('google', {})
+        .get('redirect_url')
+    )
+    if google_redirect:
+        provided_value = app.config['OPENID_CONNECT']['google']['redirect_url']
+        app.config['OPENID_CONNECT']['google']['redirect_url'] = (
+            provided_value.replace('{{BASE_URL}}', app.config['BASE_URL'])
+        )
+
+    default_logout = app.config.get('DEFAULT_LOGIN_URL')
+    if default_logout:
+        provided_value = app.config['DEFAULT_LOGIN_URL']
+        app.config['DEFAULT_LOGIN_URL'] = (
+            provided_value.replace('{{BASE_URL}}', app.config['BASE_URL'])
+        )
+
+    shib_url = app.config.get('SSO_URL')
+    if shib_url:
+        provided_value = app.config['SSO_URL']
+        app.config['SSO_URL'] = (
+            provided_value.replace('{{BASE_URL}}', app.config['BASE_URL'])
+        )
+
+    access_token_url = (
+        app.config.get('OPENID_CONNECT', {})
+        .get('fence', {})
+        .get('client_kwargs', {})
+        .get('redirect_uri')
+    )
+    if access_token_url:
+        provided_value = (
+            app.config['OPENID_CONNECT']['fence']['client_kwargs']['redirect_uri']
+        )
+        app.config['OPENID_CONNECT']['fence']['client_kwargs']['redirect_uri'] = (
+            provided_value.replace('{{BASE_URL}}', app.config['BASE_URL'])
+        )
+
+    # api_base_url replacing
+    api_base_url = (
+        app.config.get('OPENID_CONNECT', {})
+        .get('fence', {})
+        .get('api_base_url')
+    )
+    if api_base_url is not None:
+        authorize_url = (
+            app.config.get('OPENID_CONNECT', {})
+            .get('fence', {})
+            .get('authorize_url')
+        )
+        if authorize_url:
+            provided_value = (
+                app.config['OPENID_CONNECT']['fence']['authorize_url']
+            )
+            app.config['OPENID_CONNECT']['fence']['authorize_url'] = (
+                provided_value.replace('{{api_base_url}}', api_base_url)
+            )
+
+        access_token_url = (
+            app.config.get('OPENID_CONNECT', {})
+            .get('fence', {})
+            .get('access_token_url')
+        )
+        if access_token_url:
+            provided_value = (
+                app.config['OPENID_CONNECT']['fence']['access_token_url']
+            )
+            app.config['OPENID_CONNECT']['fence']['access_token_url'] = (
+                provided_value.replace('{{api_base_url}}', api_base_url)
+            )
+
+        refresh_token_url = (
+            app.config.get('OPENID_CONNECT', {})
+            .get('fence', {})
+            .get('refresh_token_url')
+        )
+        if refresh_token_url:
+            provided_value = (
+                app.config['OPENID_CONNECT']['fence']['refresh_token_url']
+            )
+            app.config['OPENID_CONNECT']['fence']['refresh_token_url'] = (
+                provided_value.replace('{{api_base_url}}', api_base_url)
+            )
 
     cirrus.config.config.update(**app.config.get('CIRRUS_CFG', {}))
 
@@ -108,14 +209,13 @@ def app_register_blueprints(app):
 
     @app.route('/logout')
     def logout_endpoint():
-        root = app.config.get('APPLICATION_ROOT', '')
+        root = app.config.get('BASE_URL', '')
         request_next = flask.request.args.get('next', root)
         if request_next.startswith('https') or request_next.startswith('http'):
             next_url = request_next
         else:
             next_url = build_redirect_url(app.config.get('ROOT_URL', ''), request_next)
         return logout(next_url=next_url)
-
 
     @app.route('/jwt/keys')
     def public_keys():
@@ -182,7 +282,6 @@ def app_init(app, settings='fence.settings', root_dir=None):
     server.init_app(app)
 
 
-
 @app.errorhandler(Exception)
 def user_error(error):
     """
@@ -204,7 +303,7 @@ def check_csrf():
         csrf_header = flask.request.headers.get('x-csrf-token')
         csrf_cookie = flask.request.cookies.get('csrftoken')
         referer = flask.request.headers.get('referer')
-        flask.current_app.logger.debug('HTTP REFERER ' + referer)         
+        flask.current_app.logger.debug('HTTP REFERER ' + referer)
         if not all([csrf_cookie, csrf_header, csrf_cookie == csrf_header, referer]):
             raise UserError("CSRF verification failed. Request aborted")
 
@@ -221,4 +320,3 @@ def set_csrf(response):
     if flask.request.method in ['POST', 'PUT', 'DELETE']:
         current_session.commit()
     return response
-

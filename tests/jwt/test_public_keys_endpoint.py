@@ -14,7 +14,7 @@ def test_keys_endpoint(app, client):
     public_keys = response.json.get('keys')
     assert public_keys, response.json
 
-    comparison = zip(public_keys, JWT_KEYPAIR_FILES.items())
+    comparison = zip(public_keys, OrderedDict(JWT_KEYPAIR_FILES).items())
     for (kid, public_key), (settings_kid, (public_key_file, _)) in comparison:
         assert kid == settings_kid
         assert public_key == utils.read_file(public_key_file)

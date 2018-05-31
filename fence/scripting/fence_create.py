@@ -5,14 +5,14 @@ import time
 import uuid
 import jwt
 import yaml
-from sqlalchemy import func
-
+from collections import OrderedDict
 
 # third-party
 from authlib.common.encoding import to_unicode
 from cirrus import GoogleCloudManager
 from cirrus.config import config as cirrus_config
 from cdispyutils.log import get_logger
+from sqlalchemy import func
 from userdatamodel.driver import SQLAlchemyDriver
 from userdatamodel.models import (
     AccessPrivilege,
@@ -502,9 +502,9 @@ def get_jwt_keypair(kid, root_dir):
     private_filepath = None
     if kid is None:
         private_filepath = os.path.join(
-            root_dir, JWT_KEYPAIR_FILES.values()[0][1])
+            root_dir, OrderedDict(JWT_KEYPAIR_FILES).values()[0][1])
     else:
-        for _kid, (_, private) in JWT_KEYPAIR_FILES.iteritems():
+        for _kid, (_, private) in OrderedDict(JWT_KEYPAIR_FILES).iteritems():
             if(kid != _kid):
                 continue
             private_filepath = os.path.join(root_dir, private)
@@ -521,7 +521,7 @@ def get_jwt_keypair(kid, root_dir):
     if kid:
         return kid, private_key
     else:
-        return JWT_KEYPAIR_FILES.keys()[0], private_key
+        return OrderedDict(JWT_KEYPAIR_FILES).keys()[0], private_key
 
 
 def create_user_token(DB, BASE_URL, ROOT_DIR, kid, token_type, username, scopes, expires_in=3600):

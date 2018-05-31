@@ -1,5 +1,4 @@
 import pytest
-from collections import OrderedDict
 
 @pytest.fixture(scope='module')
 def example_usernames():
@@ -25,7 +24,7 @@ def mock_keypairs(monkeypatch, kid, kid_2):
     Change the keypair configuration in ``fence.settings.JWT_KEYPAIR_FILES``.
     """
 
-    JWT_KEYPAIR_FILES = OrderedDict([
+    JWT_KEYPAIR_FILES = ([
         (
             kid,
             ('tests/resources/keys/test_public_key.pem', 'tests/resources/keys/test_private_key.pem'),
