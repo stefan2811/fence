@@ -36,29 +36,25 @@ app = flask.Flask(__name__)
 CORS(app=app, headers=['content-type', 'accept'], expose_headers='*')
 
 
-def app_config(app, settings='fence.settings', root_dir=None):
+def app_config(
+        app, settings='fence.settings', root_dir=None, config_path=None,
+        file_name=None):
     """
     Set up the config for the Flask app.
     """
     if root_dir is None:
         root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    # TODO better way to search for yaml? pass as arg into init?
-    try:
-        config_path = os.path.realpath(os.path.join(root_dir + '/fence/config.yaml'))
-        print(config_path)
-        data = yaml_load(open(config_path))
-    except IOError:
-        try:
-            data = yaml_load(open('/var/www/fence/config.yaml'))
-        except IOError as exc:
-            raise IOError(
-                'Could not find config.yaml in fence root dir or '
-                '/var/www/fence')
+    app.config.from_object(settings)
+
+    search_folders = app.config.get('CONFIG_SEARCH_FOLDERS', [])
+    file_name = file_name or 'config.yaml'
+    config_path = config_path or get_config_path(search_folders, file_name)
+    app.logger.info('Using configuration: {}'.format(config_path))
+    data = yaml_load(open(config_path))
 
     app.config.update(data)
 
-    app.config.from_object(settings)
     if 'ROOT_URL' not in app.config:
         url = urlparse.urlparse(app.config['BASE_URL'])
         app.config['ROOT_URL'] = '{}://{}'.format(url.scheme, url.netloc)
@@ -89,7 +85,7 @@ def app_config(app, settings='fence.settings', root_dir=None):
         ])
     }
 
-    # TODO should we do generatic template replacing or use a template engine?
+    # TODO should we do generic template replacing or use a template engine?
 
     # BASE_URL replacement
     google_redirect = (
@@ -178,6 +174,18 @@ def app_config(app, settings='fence.settings', root_dir=None):
             )
 
     cirrus.config.config.update(**app.config.get('CIRRUS_CFG', {}))
+
+
+def get_config_path(search_folders, file_name='config.yaml'):
+    for folder in search_folders:
+        config_path = os.path.join(folder, file_name)
+        if os.path.exists(config_path):
+            return config_path
+
+    # if we haven't returned a path by now, fence couldn't find the config
+    raise IOError(
+        'Could not find config.yaml. Searched in the following locations: '
+        '{}'.format(str(search_folders)))
 
 
 def app_register_blueprints(app):

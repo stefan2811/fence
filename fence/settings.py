@@ -1,5 +1,12 @@
 import os
 
+#: ``CONFIG_SEARCH_FOLDERS: List(str)``
+#: Folders to look in for the config.yaml for fence
+CONFIG_SEARCH_FOLDERS = [
+    '/var/www/fence',
+    '/etc/gen3/fence'
+]
+
 #: ``ACCESS_TOKEN_COOKIE_NAME: str``
 #: The name of the browser cookie in which the access token will be stored.
 ACCESS_TOKEN_COOKIE_NAME = 'access_token'
