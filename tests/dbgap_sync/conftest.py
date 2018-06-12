@@ -9,8 +9,6 @@ from userdatamodel import Base
 from userdatamodel.models import *
 from userdatamodel.driver import SQLAlchemyDriver
 
-from ..test_settings import DB
-
 from fence.models import (
     AccessPrivilege,
     AuthorizationProvider,
@@ -29,7 +27,7 @@ LOCAL_YAML_DIR = os.path.join(
 
 
 @pytest.fixture
-def syncer(db_session):
+def syncer(app, db_session):
     provider = [{
         'name': 'test-cleversafe',
         'backend': 'cleversafe'
@@ -81,7 +79,7 @@ def syncer(db_session):
     patcher.start()
 
     syncer_obj = UserSyncer(
-        dbGaP=dbGap, DB=DB, db_session=db_session, project_mapping=project_mapping,
+        dbGaP=dbGap, DB=app.config['DB'], db_session=db_session, project_mapping=project_mapping,
         storage_credentials={'test-cleversafe': {'backend': 'cleversafe'}},
         is_sync_from_dbgap_server=False,
         sync_from_local_csv_dir=LOCAL_CSV_DIR,
