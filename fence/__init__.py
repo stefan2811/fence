@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import os
+import glob
 from yaml import safe_load as yaml_load
 
 from authutils.oauth2.client import OAuthClient
@@ -48,7 +49,6 @@ def app_config(
     app.config.from_object(settings)
 
     search_folders = app.config.get('CONFIG_SEARCH_FOLDERS', [])
-    file_name = file_name or 'config.yaml'
     config_path = config_path or get_config_path(search_folders, file_name)
     app.logger.info('Using configuration: {}'.format(config_path))
     data = yaml_load(open(config_path))
@@ -191,16 +191,33 @@ def app_config(
     cirrus.config.config.update(**app.config.get('CIRRUS_CFG', {}))
 
 
-def get_config_path(search_folders, file_name='config.yaml'):
-    for folder in search_folders:
-        config_path = os.path.join(folder, file_name)
-        if os.path.exists(config_path):
-            return config_path
 
-    # if we haven't returned a path by now, fence couldn't find the config
-    raise IOError(
-        'Could not find config.yaml. Searched in the following locations: '
-        '{}'.format(str(search_folders)))
+def get_config_path(search_folders, file_name=None):
+    """
+    Return the path of a single configuration file ending in config.yaml
+    from one of the search folders.
+
+    NOTE: Will return the first match it finds. If multiple are found,
+    this will error out.
+    """
+    possible_configs = []
+    for folder in search_folders:
+        file_name = file_name or '*config.yaml'
+        config_path = os.path.join(folder, file_name)
+        possible_files = glob.glob(config_path)
+        possible_configs.extend(possible_files)
+
+    if len(possible_configs) == 1:
+        return possible_configs[0]
+    elif len(possible_configs) > 1:
+        raise IOError(
+            'Multiple config.yaml files found: {}. Please specify which '
+            'configuration to use with "python run.py -c some-config.yaml".'
+            .format(str(possible_configs)))
+    else:
+        raise IOError(
+            'Could not find config.yaml. Searched in the following locations: '
+            '{}'.format(str(search_folders)))
 
 
 def app_register_blueprints(app):
@@ -298,8 +315,12 @@ def app_sessions(app):
     app.session_interface = UserSessionInterface()
 
 
-def app_init(app, settings='fence.settings', root_dir=None):
-    app_config(app, settings=settings, root_dir=root_dir)
+def app_init(
+        app, settings='fence.settings', root_dir=None, config_path=None,
+        config_file_name=None):
+    app_config(
+        app, settings=settings, root_dir=root_dir, config_path=config_path,
+        file_name=config_file_name)
     app_sessions(app)
     app_register_blueprints(app)
     server.init_app(app)
