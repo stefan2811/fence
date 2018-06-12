@@ -72,7 +72,10 @@ def app_config(
         url = urlparse.urlparse(app.config['BASE_URL'])
         app.config['ROOT_URL'] = '{}://{}'.format(url.scheme, url.netloc)
 
-    app.keypairs = []
+    if root_dir is None:
+        root_dir = os.path.dirname(
+                os.path.dirname(os.path.realpath(__file__)))
+
     if 'AWS_CREDENTIALS' in app.config and len(app.config['AWS_CREDENTIALS']) > 0:
         value = app.config['AWS_CREDENTIALS'].values()[0]
         app.boto = BotoManager(value, logger=app.logger)
@@ -80,16 +83,7 @@ def app_config(
             fence.blueprints.data.blueprint, url_prefix='/data'
         )
 
-    for kid, (public, private) in OrderedDict(app.config['JWT_KEYPAIR_FILES']).iteritems():
-        public_filepath = os.path.join(root_dir, public)
-        private_filepath = os.path.join(root_dir, private)
-        with open(public_filepath, 'r') as f:
-            public_key = f.read()
-        with open(private_filepath, 'r') as f:
-            private_key = f.read()
-        app.keypairs.append(keys.Keypair(
-            kid=kid, public_key=public_key, private_key=private_key
-        ))
+    app.keypairs = keys.load_keypairs(os.path.join(root_dir, 'keys'))
 
     app.jwt_public_keys = {
         app.config['BASE_URL']: OrderedDict([
