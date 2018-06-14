@@ -500,7 +500,7 @@ class JWTCreator(object):
 
     default_expiration = 3600
 
-    def __init__(self, db, base_url=None, **kwargs):
+    def __init__(self, db, base_url, **kwargs):
         self.db = db
         self.base_url = base_url
 
@@ -519,7 +519,7 @@ class JWTCreator(object):
 
         # Set attributes on this object from the kwargs.
         for kwarg_name in self.all_kwargs:
-            setattr(self, kwarg_name, kwargs[kwarg_name])
+            setattr(self, kwarg_name, kwargs.get(kwarg_name))
 
         # If the scopes look like this:
         #
@@ -552,7 +552,8 @@ class JWTCreator(object):
                     'no user found with given username: ' + self.username
                 )
             return generate_signed_access_token(
-                self.kid, self.private_key, user, self.expires_in, self.scopes
+                self.kid, self.private_key, user, self.expires_in, self.scopes,
+                iss=self.base_url,
             )
 
     def create_refresh_token(self):
@@ -574,7 +575,8 @@ class JWTCreator(object):
                     'no user found with given username: ' + self.username
                 )
             jwt_result = generate_signed_refresh_token(
-                self.kid, self.private_key, user, self.expires_in, self.scopes
+                self.kid, self.private_key, user, self.expires_in, self.scopes,
+                iss=self.base_url,
             )
 
             current_session.add(UserRefreshToken(
