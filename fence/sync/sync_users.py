@@ -285,7 +285,7 @@ class UserSyncer(object):
                     'project2': ['read-storage'],
                     }
             }
-            user_info: a dict of 
+            user_info: a dict of
             {
                 username: {
                     'email': email,
@@ -426,12 +426,12 @@ class UserSyncer(object):
         self._upsert_userinfo(sess, user_info)
         self._revoke_from_storage(to_delete, sess)
         self._revoke_from_db(sess, to_delete)
-        self._grant_from_storage(to_add, user_project)
+        self._grant_from_storage(to_add, user_project, sess)
         self._grant_from_db(sess, to_add, user_info,
                             user_project, auth_provider_list)
 
         # re-grant
-        self._grant_from_storage(to_update, user_project)
+        self._grant_from_storage(to_update, user_project, sess)
         self._update_from_db(sess, to_update, user_project)
 
     def _revoke_from_db(self, sess, to_delete):
@@ -472,10 +472,10 @@ class UserSyncer(object):
                  .filter(AccessPrivilege.project.has(auth_id=project_auth_id))
                  .all())
             for access in q:
-                self.logger.info(
-                    "update {} access to {} in db"
-                    .format(username, project_auth_id))
                 access.privilege = user_project[username][project_auth_id]
+                self.logger.info(
+                    "update {} with {} access to {} in db"
+                    .format(username, access.privilege, project_auth_id))
 
         sess.commit()
 
@@ -492,7 +492,6 @@ class UserSyncer(object):
             None
         """
         for (username, project_auth_id) in to_add:
-            self.logger.info('update user info {}'.format(username))
             u = sess.query(User).filter(func.lower(User.username) == username.lower()).first()
             auth_provider = auth_provider_list[0]
             if 'dbgap_role' not in user_info[username]['tags']:
@@ -504,6 +503,9 @@ class UserSyncer(object):
                 privilege=list(
                     user_project[username][project_auth_id]),
                 auth_provider=auth_provider)
+            self.logger.info(
+                'grant user {} to {} with access'
+                .format(username, user_access.project, user_access.privilege))
             sess.add(user_access)
 
         sess.commit()
@@ -570,16 +572,17 @@ class UserSyncer(object):
 
                 self.logger.info(
                     'revoke {} access to {} in {}'
-                    .format(username, project, sa.provider.name))
+                    .format(username, project_auth_id, sa.provider.name))
 
                 self.storage_manager.revoke_access(
                     provider=sa.provider.name,
                     username=username,
-                    project=project
+                    project=project,
+                    session=sess
                 )
         sess.commit()
 
-    def _grant_from_storage(self, to_add, user_project):
+    def _grant_from_storage(self, to_add, user_project, sess):
         """
         If a project have storage backend,
         grant user's access to buckets in the storage backend
@@ -593,16 +596,19 @@ class UserSyncer(object):
         for (username, project_auth_id) in to_add:
             project = self._projects[project_auth_id]
             for sa in project.storage_access:
-                self.logger.info(
-                    'grant {} access to {} in {}'
-                    .format(username, project, sa.provider.name))
-
                 access = list(user_project[username][project_auth_id])
+
+                self.logger.info(
+                    'grant {} access {} to {} in {}'
+                    .format(
+                        username, access, project_auth_id, sa.provider.name))
+
                 self.storage_manager.grant_access(
                     provider=sa.provider.name,
                     username=username,
                     project=project,
-                    access=access
+                    access=access,
+                    session=sess
                 )
 
     def _init_projects(self, user_project, sess):
@@ -700,16 +706,3 @@ class UserSyncer(object):
             self.logger.info('Finish syncing to db and storage backend')
         else:
             self.logger.info('No users for syncing!!!')
-
-
-if __name__ == '__main__':
-    DB = 'postgresql://test:test@localhost:5432/fence_test'
-    driver = SQLAlchemyDriver(DB)
-    with driver.session as sess:
-        user = sess.query(User).filter(User.id == 17).first()
-        import pdb
-        pdb.set_trace()
-        dir(user)
-        print(user)
-        tags = user.tags
-        print(type(tags))

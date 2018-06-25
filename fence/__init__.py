@@ -398,7 +398,6 @@ def get_config_path(search_folders, file_name='*config.yaml'):
             'Could not find config.yaml. Searched in the following locations: '
             '{}'.format(str(search_folders)))
 
-
 @app.errorhandler(Exception)
 def user_error(error):
     """

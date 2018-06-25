@@ -135,6 +135,8 @@ CIRRUS_CFG:
   GOOGLE_IDENTITY_DOMAIN: ''
   GOOGLE_CLOUD_IDENTITY_ADMIN_EMAIL: ''
 
+GOOGLE_GROUP_PREFIX: test
+
 #### Proxy ####
 # If the api is behind firewall that need to set http proxy (see below)
 # HTTP_PROXY:
@@ -151,10 +153,25 @@ AWS_CREDENTIALS:
     aws_access_key_id: ''
     aws_secret_access_key: ''
 
+
 S3_BUCKETS:
-  bucket1: CRED1
-  bucket2: CRED2
-  bucket3: CRED1
+  # cdis-presigned-url-test:
+  #   cred: 'fence-bot'
+  #   type: 'internal'
+  bucket1:
+    cred: 'CRED1'
+  bucket2:
+    cred: 'CRED2'
+  bucket3:
+    cred: 'CRED1'
+  bucket4:
+    cred: '*'
+  bucket5:
+    cred: 'CRED2'
+    role-arn: 'arn:aws:iam::707767160287:role/bucket_reader_writer_to_cdistest-presigned-url_role'
+}
+
+ASSUMED_ROLES: []
 
 #### dbGaP User Syncing Support ####
 # "dbGaP project serves as an access gateway for researchers seeking to gain
