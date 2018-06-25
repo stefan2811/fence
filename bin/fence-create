@@ -34,7 +34,7 @@ def parse_arguments():
     parser.add_argument(
         '--path',
         default='/var/www/fence/',
-        help='path to find local_settings.py',
+        help='path to find configuration',
     )
 
     subparsers = parser.add_subparsers(title='action', dest='action')
