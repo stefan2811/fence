@@ -53,3 +53,78 @@ MAX_API_KEY_TTL = 2592000
 #: ``MAX_ACCESS_TOKEN_TTL: int``
 #: The number of seconds after an access token is issued until it expires.
 MAX_ACCESS_TOKEN_TTL = 3600
+
+AWS_CREDENTIALS = {
+    "CRED1": {
+        'aws_access_key_id': '',
+        'aws_secret_access_key': ''
+    },
+    "CRED2": {
+        'aws_access_key_id': '',
+        'aws_secret_access_key': ''
+    }
+}
+
+ASSUMED_ROLES = {
+}
+
+S3_BUCKETS = {
+    # 'cdis-presigned-url-test': {
+    #     'cred': 'fence-bot',
+    #     'type': 'internal'
+    # },
+    'bucket1': {
+        'cred': 'CRED1',
+    },
+    'bucket2': {
+        'cred': 'CRED2',
+    },
+    'bucket3': {
+        'cred': 'CRED1',
+    },
+    'bucket4': {
+        'cred': '*',
+    },
+    'bucket5': {
+        'cred': 'CRED2',
+        'role-arn': 'arn:aws:iam::707767160287:role/bucket_reader_writer_to_cdistest-presigned-url_role',
+    }
+}
+
+# S3_BUCKETS = {
+#     "bucket1": "CRED1",
+#     "bucket2": "CRED2",
+#     "bucket3": "CRED1",
+#     "bucket4": "*",
+# }
+
+ENABLED_IDENTITY_PROVIDERS = {
+    # ID for which of the providers to default to.
+    'default': 'google',
+    # Information for identity providers.
+    'providers': {
+        'fence': {
+            'name': 'Fence Multi-Tenant OAuth',
+        },
+        'google': {
+            'name': 'Google OAuth',
+        },
+        'shibboleth': {
+            'name': 'NIH Login',
+        },
+    },
+}
+
+SHIBBOLETH_HEADER = 'persistent_id'
+
+OPENID_CONNECT = {
+    'google': {
+        'client_id': '',
+        'client_secret': '',
+        'redirect_url': ''
+    },
+}
+
+GOOGLE_GROUP_PREFIX = 'test'
+
+CIRRUS_CFG = {}
